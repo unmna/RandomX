@@ -105,22 +105,14 @@ void* allocMemoryPages(std::size_t bytes) {
 	#else
 		#define RESERVED_FLAGS 0
 	#endif
-	#ifdef __APPLE__
-		#include <TargetConditionals.h>
-		#ifdef TARGET_OS_OSX
-			#define MEXTRA MAP_JIT
-		#else
-			#define MEXTRA 0
-		#endif
+	#ifdef USE_PTHREAD_JIT_WP
+		#define MEXTRA MAP_JIT
+		#define PEXTRA	PROT_EXEC
 	#else
-		#define MEXTRA 0
-	#endif
-#ifdef USE_PTHREAD_JIT_WP
-#define PEXTRA	PROT_EXEC
-	#else
+		#define MEXTRA	0
 		#define PEXTRA	0
 	#endif
-    #ifdef USE_PTHREAD_JIT_WP
+	#ifdef USE_PTHREAD_JIT_WP
 		#define PEXTRA	PROT_EXEC
 	#else
 		#define PEXTRA	0
@@ -128,9 +120,9 @@ void* allocMemoryPages(std::size_t bytes) {
 	mem = mmap(nullptr, bytes, PAGE_READWRITE | RESERVED_FLAGS | PEXTRA, MAP_ANONYMOUS | MAP_PRIVATE | MEXTRA, -1, 0);
 	if (mem == MAP_FAILED)
 		throw std::runtime_error("allocMemoryPages - mmap failed");
-#ifdef USE_PTHREAD_JIT_WP
+	#ifdef USE_PTHREAD_JIT_WP
 	pthread_jit_write_protect_np(false);
-#endif
+	#endif
 #endif
 	return mem;
 }
